@@ -1,0 +1,32 @@
+name: Update Weather Data
+
+# Ejecutar cada 30 minutos
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+
+jobs:
+  update-weather:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Get Weather Data and Send to ThingSpeak
+      run: |
+        # Configura tus variables de entorno
+        API_KEY_WEATHER="f896614c860add3f47d6b5470a7330e7"
+        API_KEY_THINGSPEAK="X43GV3B5YUN17V9H"
+        CITY="Villa Maria"
+
+        # Obtener datos de OpenWeatherMap
+        RESPONSE=$(curl -s "https://api.openweathermap.org/data/2.5/weather?q=${CITY}&appid=${API_KEY_WEATHER}&units=metric&lang=es")
+        TEMP=$(echo $RESPONSE | jq '.main.temp')
+        HUMIDITY=$(echo $RESPONSE | jq '.main.humidity')
+
+        echo "Temperature: $TEMP"
+        echo "Humidity: $HUMIDITY"
+
+        # Enviar datos a ThingSpeak
+        curl -s "https://api.thingspeak.com/update?api_key=${API_KEY_THINGSPEAK}&field1=${TEMP}&field2=${HUMIDITY}"
